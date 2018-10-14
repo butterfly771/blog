@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<meta charset="utf-8">
+</head>
+<body>
+
+</body>
+<script type="text/javascript">
+	let obj = {
+		aa: "越祈",
+		data: {
+			skill: "流翼",
+			name: "羜与"
+		}
+	}
+
+	let keys = Object.keys(obj.data),
+		i = keys.length;
+
+	function proxy(target, sourceKey, key) {
+		const sharedProperty = {
+			enumerable: true,
+			configurable: true, 
+			get: function(){},
+			set: function(){}
+		}
+
+		sharedProperty.get = function proxyGetter() {
+			return this[sourceKey][key]
+		}
+
+		Object.defineProperty(target, key, sharedProperty)
+	}
+
+	while(i--) {
+		const key = keys[i]
+		proxy(obj, 'data', key);
+	}
+
+	console.log(obj.skill)
+
+</script>
+</html>
