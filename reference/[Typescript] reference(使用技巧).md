@@ -32,8 +32,6 @@ monorepo是管理代码的一种方式， 不同于传统的一个模块(package
 
 
 
-
-
 Monorepo 是管理项目代码的一个方式，指在一个项目仓库 (repo) 中管理多个模块/包 (package)，不同于常见的每个模块建一个 repo。
 
 现在基于lerna管理的monorepo项目架构， 
