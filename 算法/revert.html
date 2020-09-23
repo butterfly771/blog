@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+</body>
+<script>
+    // 构建一个二叉树
+    class TreeNode {
+        constructor(value) {
+            this.left = null;
+            this.right = null;
+            this.value = value
+        }
+    }
+
+    const root = new TreeNode(1)
+    root.left = new TreeNode(3)
+    root.left.left = new TreeNode(5)
+    root.left.right = new TreeNode(7)
+    root.right = new TreeNode(2)
+    root.right.left = new TreeNode(4)
+    root.right.right = new TreeNode(6)
+    root.right.right.left = new TreeNode(8)
+
+    // revert(root)
+
+    console.log(maxDepth(root))
+
+    function maxDepth(root) {
+        if(!root) {
+            return 0
+        }
+
+        return Math.max(maxDepth(root.left), maxDepth(root.right)) + 1;
+        // return Math.max(maxDepth(root.left), maxDepth(root.right)) + 1;
+}
+
+
+
+// console.log(maxDepth(root))
+
+
+
+</script>
+</html>
