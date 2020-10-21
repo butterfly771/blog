@@ -42,30 +42,17 @@ React16的fiber架构就是**基于fiber这种数据结构**实现的一种时�
 
 - 快速响应用户操作， 让用户觉得够快， 不阻塞用户操作
 
-![](./fiber1.png)
+![](https://tva1.sinaimg.cn/large/007S8ZIlly1gj6neaznjpj30u00uon0i.jpg)
 
 #### fiber单元
 
 那么, fiber到底是一种什么样的数据结构呢
 
-```js
-{
-      tag: string,   // 当前节点的名称
-      type: string,  // 当前节点的类型， 标志着当前节点是一种类组件，或者函数组件， 或者是一种原生dom标签等
-      props: Object, 
-      stateNode: Object, // 当前节点的实例/真实dom 
-      return: Fiber, // 当前fiber节点的父节点
-      alternate: Fiber, // 上一次更新的Fiber树
-      child: Fiber, // 指向第一个子节点
-      siblings: Fiber, // 指向兄弟节点
-      effectTag: UPDATE, // 副作用标示  render阶段我们会收集副作用， 增加删除 更新
-      nextEffect: null, // effect list顺序和完成的顺序是一样的， 但是节点只放改变的fiber， 没有副作用 的节点会绕过去
-}
-```
+![](https://tva1.sinaimg.cn/large/007S8ZIlly1gj6n68l3h9j31ew0g4dk6.jpg)
 
 在react中， 每个节点都是这样的一个fiber结构单元， 基于这种结构单元， react将整个页面组装成了一个链表结构。 即每一个fiber节点单元中， 都会有一个指针，指向下一个要跟新的单元。 如图所示
 
-![](./fiber2.png)
+![](https://tva1.sinaimg.cn/large/007S8ZIlly1gj7dhw2afxj30ps0lqdhj.jpg)
 
 流程解析：
 
@@ -83,33 +70,11 @@ React16的fiber架构就是**基于fiber这种数据结构**实现的一种时�
 
 1. 用户调用**ReactDOM.render**方法 
 
-   ```jsx
-   ReactDOM.render(<Component name="越祈" />, document.getElementById('root'))
-   ```
-
+   ![](https://tva1.sinaimg.cn/large/007S8ZIlly1gj6n47hsldj310y054gm9.jpg)
+   
 2. 浏览器调用**requestIdleCallback**方法，开启调度
 
-   ```js
-   // 循环执行工作
-   function workLoop(deadline) {
-       let shouldYield = false; // 是否让出时间片或者说控制权
-       while(nextUnitOfWork && !shouldYield) {
-           nextUnitOfWork = performUnitOfWork(nextUnitOfWork)
-   
-           shouldYield = deadline.timeRemaining() < 1; // 没有时间了， 让出控制权
-       }
-   
-       if(!nextUnitOfWork && workInProgressRoot) {
-           console.log('render阶段结束')
-           commitRoot()
-       }
-       // 告诉浏览器， 现在有任务， 在空闲的时候执行当前的任务
-       // 任务优先级： expirationTime
-       requestIdleCallback(workLoop, { timeout: 500 });
-   }
-   
-   
-   ```
+   ![](https://tva1.sinaimg.cn/large/007S8ZIlly1gj6n0xgmywj310w0o4aef.jpg)
 
    这里浏览器会以一帧作为参考维度， 优先执行高优任务。
 
@@ -117,17 +82,7 @@ React16的fiber架构就是**基于fiber这种数据结构**实现的一种时�
 
 3. ReactDom.render方法将挂载节点转化为fiber节点, 同时开始**reconciler**阶段
 
-   ```js
-   let rootFiber = {
-        tag: TAG_ROOT,   // 每个fiber都会有一个fiber，标志这此元素的类型
-        stateNode: container, // 一般情况下如果这个元素是一个原生节点的话， stateNode指向真是DOM元素
-        props: {     // 这个fiber的属性对象， children里面放的是要渲染的元素
-           children: [element] // prop.children是一个数组， 里面放的是react元素， 虚拟dom。 后面会根据每个react元素创建对应的fiber
-        }
-   }
-   // 开始reconciler（调和阶段）
-   scheduleRoot(rootFiber)
-   ```
+   ![](https://tva1.sinaimg.cn/large/007S8ZIlly1gj6mz008whj31ko0d4adn.jpg)
 
    react主要有两个阶段
 
@@ -145,12 +100,7 @@ React16的fiber架构就是**基于fiber这种数据结构**实现的一种时�
 
    如果是初次渲染的话， 从根节点(rootFiber)开始调度
 
-   ```js
-   export function scheduleRoot(rootFiber) {
-       workInProgressRoot = rootFiber
-       nextUnitOfWork = workInProgressRoot;
-   }
-   ```
+   ![](https://tva1.sinaimg.cn/large/007S8ZIlly1gj6mmfm263j30lc084q3p.jpg)
 
 5. 处理当前的fiber节点
 
@@ -158,36 +108,7 @@ React16的fiber架构就是**基于fiber这种数据结构**实现的一种时�
 
    - 根（rootFiber）:  直接处理孩子fiber
 
-   ```js
-   /**
-    * 开始解析
-    * completeUnitOfWork
-    * 1. 创建真实DOM元素
-    * 2. 创建子fiber
-    */
-   function beginWork(currentFiber) {
-       if(currentFiber.tag === TAG_ROOT) {
-           // 将根节点的孩子     转化成fiber单元
-           updateHostRoot(currentFiber)
-   
-       // 如果是文本fiber
-       }else if(currentFiber.tag === TAG_TEXT) {
-           updateHostText(currentFiber)
-       }
-   
-       // 如果是原生节点
-       else if(currentFiber.tag === TAG_HOST) {
-           updateHostTag(currentFiber)
-       }
-   
-       // 如果是类式组件
-       else if(currentFiber.tag === TAG_CLASS)  {
-           updateClassComponent(currentFiber)
-       }else if(currentFiber.tag === TAG_FUNCTION_COMPONENT) {
-           updateFunctionComponent(currentFiber)
-       }
-   }
-   ```
+   ![](https://tva1.sinaimg.cn/large/007S8ZIlly1gj6ml4i88tj30tq0w4dl4.jpg)
 
 6. 处理孩子**reconcileChildren**
 
@@ -195,51 +116,7 @@ React16的fiber架构就是**基于fiber这种数据结构**实现的一种时�
 
     同时建立关联关系， 形成一个链表(firstEffect和lastEffect)
 
-   ```js
-   function reconcileChildren(currentFiber, newChildren) {
-       let newChildIndex = 0; // 新子节点的索引
-       // 如果当前的fiber有alternate属性， 拿到它的第一个孩子
-       let oldFiber = currentFiber.alternate && currentFiber.alternate.child; 
-       
-       let prevSibling;  // 上一个新的子fiber
-   
-       if(oldFiber) {
-           oldFiber.firstEffect = oldFiber.lastEffect = oldFiber.nextEffect = null;
-       }
-   
-       // begin的时候创建fiber， 在completeUnitOfWork的时候收集effect
-       while(newChildIndex < newChildren.length || oldFiber) {
-           let newChild = newChildren[newChildIndex];
-           let newFiber;
-           let tag;
-   
-           // .... 
-        
-        newFiber = {
-          tag,
-          type: newChild.type,
-          props: newChild.props,
-          stateNode: null, 
-          updateQueue: new UpdateQueue(),
-          return: currentFiber,
-          effectTag: PLACEMENT, // 副作用标示  render阶段我们会收集副作用， 增加删除 更新
-          nextEffect: null, // effect list顺序和完成的顺序是一样的， 但是节点只放改变的fiber， 没有副作用 的节点会绕过去
-        }
-        if(newFiber) {
-          if(newChildIndex === 0) {
-            // children
-            currentFiber.child = newFiber;
-          }else {
-            // 上一个节点的兄弟节点指向当前的feber
-            prevSibling.sibling = newFiber
-          }
-   
-     		  prevSibling = newFiber
-   	   }
-   
-        newChildIndex++;
-   }
-   ```
+   ![](https://tva1.sinaimg.cn/large/007S8ZIlly1gj6moblyw7j30wp0u048a.jpg)
 
 7. 当前fiber节点解析完成。 执行下一步的操作
 
@@ -248,43 +125,7 @@ React16的fiber架构就是**基于fiber这种数据结构**实现的一种时�
    - 如果没有孩子也没有兄弟， 返回父节点， 标志当前fiber节点调度完成
    - 建立effect链表， 收集effect
 
-   ```js
-   // 在完成的时候要收集有副作用的fiber, 然后组成effect list
-   // 每个fiber有两个属性， firstEffect指向第一个有副作用的子fiber， lastEffect指向最后一个有副作用的子节点
-   // 中间的用nextEffect做成一个单链表
-   function completeUnitOfWork(currentFiber) {
-       
-       let returnFiber = currentFiber.return
-   
-       if(returnFiber) {
-           if(!returnFiber.firstEffect) {
-               returnFiber.firstEffect = currentFiber.firstEffect;
-           }
-   
-           if(!!currentFiber.lastEffect) {
-               if(returnFiber.lastEffect) {
-                   returnFiber.lastEffect.nextEffect = currentFiber.firstEffect
-               }
-   
-               returnFiber.lastEffect = currentFiber.lastEffect
-               
-           }
-   
-           // 如果有副作用
-           const effectTag = currentFiber.effectTag 
-           
-           if(effectTag) {
-               if(!!returnFiber.lastEffect) {
-                   returnFiber.lastEffect.nextEffect = currentFiber
-               }else {
-                   returnFiber.firstEffect = currentFiber;
-               }
-               returnFiber.lastEffect = currentFiber; 
-              
-           }
-       }
-   }
-   ```
+   ![](https://tva1.sinaimg.cn/large/007S8ZIlly1gj6mqfpsu8j30yt0u0dmm.jpg)
 
    
 
@@ -292,71 +133,11 @@ React16的fiber架构就是**基于fiber这种数据结构**实现的一种时�
 
    将之前手机到的effect链表依次更新
 
-   ```js
-   // 提交effect链
-   function commitRoot() {
-       // 执行effect之前， 先把该删的删掉
-       deletions.forEach(commitWork)
-       let currentFiber = workInProgressRoot.firstEffect; 
-   
-       while(currentFiber) {
-           commitWork(currentFiber);
-   
-   
-           currentFiber = currentFiber.nextEffect
-       }
-       deletions.length = 0;
-       // 当前渲染成功的根fiber， 赋给currentRoot
-       currentRoot = workInProgressRoot;
-       workInProgressRoot = null;
-   }
-   ```
+   ![](https://tva1.sinaimg.cn/large/007S8ZIlly1gj6mtslifwj30rw0l441l.jpg)
 
    依次处理新增， 删除， 更新节点等操作
 
-   ```js
-   function commitWork(currentFiber) {
-       if(!currentFiber) { return }
-       let returnFiber = currentFiber.return;
-       
-       while(returnFiber.tag !== TAG_HOST && returnFiber.tag !== TAG_ROOT && returnFiber.tag !== TAG_TEXT ) {
-           returnFiber = returnFiber.return
-       }
-   
-       let returnDOM = returnFiber.stateNode;
-       // 新增节点
-       if(currentFiber.effectTag === PLACEMENT) {
-           let nextFiber = currentFiber;
-   
-           if(nextFiber.tag === TAG_CLASS) {
-               return
-           }
-   
-           // 如果要挂载的节点不是dom节点， 那么去找它的孩子， 一直找， 知道找到真实dom节点为止
-           while(nextFiber.tag !== TAG_HOST && nextFiber.tag !== TAG_TEXT) {
-               nextFiber = currentFiber.child
-           }
-           returnDOM.appendChild(nextFiber.stateNode)
-       // 删除节点
-       }else if(currentFiber.effectTag === DELETE) {
-           // returnDOM.removeChild(currentFiber.stateNode);
-          return  commitDeletion(currentFiber, returnDOM)
-       // 更新节点
-       }else if(currentFiber.effectTag === UPDATE)  {
-           if(currentFiber.type === ELEMENT_TEXT) {
-               // fiber.alternate指向老的节点
-               if(currentFiber.alternate.props.text !== currentFiber.props.text) {
-                   currentFiber.stateNode.textContent = currentFiber.props.text
-               }
-           }else {
-               
-               updateDOM(currentFiber.stateNode, currentFiber.alternate.props, currentFiber.props)
-           }
-       }
-   
-       currentFiber.effectTag = null
-   }
-   ```
+   ![](https://tva1.sinaimg.cn/large/007S8ZIlly1gj6mx21hcij30yg0u0gvd.jpg)
 
 #### 双缓冲机制
 
